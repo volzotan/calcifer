@@ -18,12 +18,23 @@ logger = logging.getLogger(__name__)
 
 DIRECTORY = "plugins"
 SLEEP_DURATION = 1  # in sec
-LOGGING_LEVEL = logging.DEBUG
 
 class Mainframe(object):
 
-    def __init__(self):
-        logging.basicConfig(level=LOGGING_LEVEL,
+    def __init__(self, params):
+
+        if "debug" in params and params["debug"] is True:
+            self.debug = True
+            logging_level = logging.DEBUG
+        else:
+            self.debug = False
+
+        if "logging_level" in params:
+            logging_level = params["logging_level"]
+        else:
+            logging_level = logging.INFO
+
+        logging.basicConfig(level=logging_level,
                             format='%(asctime)s %(name)-20s %(levelname)-8s %(message)s',
                             datefmt='%m-%d %H:%M'
                             )
@@ -174,8 +185,9 @@ class Mainframe(object):
             for bkstr_obj in self.backstore.get_all():
                 if bkstr_obj["sent_status"] == Status.UNKNOWN:
                     for plug in self.plugins:
-                        sent_code = plug.deliver(bkstr_obj["message"])
-                        self.backstore.update(bkstr_obj["message"], status=sent_code)
+                        if self.debug is False:
+                            sent_code = plug.deliver(bkstr_obj["message"])
+                            self.backstore.update(bkstr_obj["message"], status=sent_code)
                 else:
                     pass
                     # check for delivery
@@ -208,5 +220,5 @@ class Mainframe(object):
 
 
 if __name__ == "__main__":
-    Mainframe().loop()
+    Mainframe({}).loop()
     sys.exit(0)

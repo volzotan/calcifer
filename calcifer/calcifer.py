@@ -20,14 +20,9 @@ context.working_directory = os.path.dirname(os.path.realpath(__file__)) # script
                                                                         # or working directory: os.getcwd()
 
 
-def _start():
-    mframe = mainframe.Mainframe()
+def _start(params):
+    mframe = mainframe.Mainframe(params)
     mframe.loop()
-
-
-def debug(): # TODO benachrichtigungen abschalten
-    logger.info("start in debug-mode")
-    _start()
 
 
 def start():
@@ -36,8 +31,15 @@ def start():
         _start()
     else:
         logger.info("starting daemon")
+
+        start_params = {}
+
+        if args.debug is True:
+            logger.info("start in debug-mode")
+            start_params["debug"] = True
+
         with context:
-            _start()
+            _start(start_params)
 
 
 def _send(msg):
@@ -80,10 +82,8 @@ subparsers = parser.add_subparsers(help='help for subcommand')
 
 parser_start = subparsers.add_parser('start', help='starts the daemon')
 parser_start.add_argument('-nod', '--no-detach', action="store_true", help='do not detach')
+parser_start.add_argument('-d', '--debug', action="store_true", help='debug mode')
 parser_start.set_defaults(func=start)
-
-parser_debug = subparsers.add_parser('debug', help='starts the daemon in debug mode')
-parser_debug.set_defaults(func=debug)
 
 parser_status = subparsers.add_parser('status', help='lay of the land')
 parser_status.set_defaults(func=status)
@@ -99,5 +99,8 @@ parser_stop.set_defaults(func=stop)
 #---------------------------------------------------------------------------------#
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.DEBUG,
+                        format='%(message)s')
+
     args = parser.parse_args()
     args.func()
