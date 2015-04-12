@@ -8,18 +8,25 @@ from os.path import isfile, join
 
 import json
 import logging
+from Queue import Queue
 
 from util import *
-
-from Queue import Queue
 from socketManager import SocketManager
 
 logger = logging.getLogger(__name__)
 
 DIRECTORY = "plugins"
+PACKAGE = "calcifer"
 SLEEP_DURATION = 1  # in sec
 
 class Mainframe(object):
+
+    """params:
+
+    debug: sets logging level to debug and prevents that deliver() is called on plugins
+    logging_level: sets logging level (overwrites debug)
+
+    """
 
     def __init__(self, params):
 
@@ -30,14 +37,13 @@ class Mainframe(object):
             self.debug = False
 
         if "logging_level" in params:
-            logging_level = params["logging_level"]
+            self.logging_level = params["logging_level"]
         else:
-            logging_level = logging.INFO
+            self.logging_level = logging.INFO
 
-        logging.basicConfig(level=logging_level,
+        logging.basicConfig(level=self.logging_level,
                             format='%(asctime)s %(name)-20s %(levelname)-8s %(message)s',
-                            datefmt='%m-%d %H:%M'
-                            )
+                            datefmt='%m-%d %H:%M')
 
         self.backstore = Backstore()
         self.plugins = []
@@ -52,14 +58,18 @@ class Mainframe(object):
     def startup(self):
         logger.info("Mainframe Startup")
 
-        self.load_all_modules_from_dir(DIRECTORY)
+        try:
+            self.load_all_modules_from_dir(DIRECTORY, PACKAGE)
+        except Exception:
+            logger.warn("loading plugins failed", exc_info=True)
+
         # self.register_handlers()
 
 
     def reload(self):
         self.plugins = []
         self.plugin_scheduler = Scheduler()
-        self.load_all_modules_from_dir(DIRECTORY)
+        self.load_all_modules_from_dir(DIRECTORY, PACKAGE)
 
 
     def shutdown(self):
@@ -71,8 +81,15 @@ class Mainframe(object):
         self.socketManager.close()
 
 
-    def load_all_modules_from_dir(self, dirname):
-        importlib.import_module(dirname)
+    # TODO: dir plugins is not relative to mainframe.py path (bug e.g. python calcifer/calcifer.py)
+    def load_all_modules_from_dir(self, dirname, packagename):
+
+        try:
+            importlib.import_module(dirname)
+        except ImportError: # if relative import fails due to exec from diff dir
+            dirname = "." + dirname
+            importlib.import_module(dirname, package=packagename)
+
         for importer, package_name, _ in pkgutil.iter_modules([dirname]):
             full_package_name = '%s.%s' % (dirname, package_name)
             if full_package_name not in sys.modules:
@@ -117,9 +134,11 @@ class Mainframe(object):
                         logger.error("importing plugin {0} failed, incompatible configuration".format(class_object))
                     except Exception as e:
                         logger.error("importing plugin {0} failed".format(class_object), exc_info=True)
-                        if plug.plugin_configuration["notify_on_error"]:
+                        if class_instance.plugin_configuration["notify_on_error"]:
                             pass
                             # TODO: create message
+
+        logger.info("imported {} plugins".format(len(self.plugins)))
 
 
     def register_handlers(self):
@@ -167,14 +186,16 @@ class Mainframe(object):
                             # send
 
                         self.backstore.add(msg)
+                    plug.failure = False
 
                 except Exception as e:
                     err = "plugin: {} work failed: {}".format(plug, e)
                     logger.error(err, exc_info=True)
+                    plug.failure = True
                     if plug.plugin_configuration["notify_on_error"]:
                         # use message text as mid to prevent multiple
                         # notifications about the same error
-                        msg = Message(err, Priority.SILENT, mid=err)
+                        msg = Message(err, Priority.SILENT, mid=err, sender=self)
                         self.backstore.add(msg)
 
                 # do sth with all these messages ...
@@ -201,7 +222,24 @@ class Mainframe(object):
             logger.debug("recv: [{}]".format(buff))
 
             if buff == SocketCommand.STATUS:
-                self.socketManager.send(str(self.backstore))
+                status = ""
+
+                for plug in self.plugins:
+                    # TODO: maybe print exception?
+                    fail = plug.failure
+
+                    if fail:
+                        fail = Termcolors.RED + "error" + Termcolors.RESET
+                    else:
+                        fail = "ok"
+
+                    status += "{0:20s}: {1} {2}\n".format(plug.name, self.plugin_scheduler.get_duty_cylce(plug), fail)
+
+                if len(self.plugins) > 0:
+                    status += "\n"
+
+                status += str(self.backstore)
+                self.socketManager.send(status)
 
                 # print scheduler contents
 
@@ -220,5 +258,5 @@ class Mainframe(object):
 
 
 if __name__ == "__main__":
-    Mainframe({}).loop()
+    Mainframe({"logging_level": logging.DEBUG}).loop()
     sys.exit(0)

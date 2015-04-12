@@ -69,6 +69,7 @@ class Message(object):
 class Plugin(object):
 
     plugin_configuration = {}
+    failure = False
 
     def __init__(self, config):
         pass
@@ -113,6 +114,12 @@ class Scheduler(object):
             return True
         else:
             return False
+
+    def get_duty_cylce(self, plugin):
+        if plugin in self.data:
+            return self.data[plugin][0]
+        else:
+            return None
 
 
 class Backstore(object):

@@ -26,17 +26,17 @@ def _start(params):
 
 
 def start():
+    start_params = {}
+
+    if args.debug is True:
+        logger.info("start in debug-mode")
+        start_params["debug"] = True
+
     if args.no_detach is True:
         logger.info("start in no-detach-mode")
-        _start()
+        _start(start_params)
     else:
         logger.info("starting daemon")
-
-        start_params = {}
-
-        if args.debug is True:
-            logger.info("start in debug-mode")
-            start_params["debug"] = True
 
         with context:
             _start(start_params)
