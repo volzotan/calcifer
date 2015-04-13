@@ -186,12 +186,12 @@ class Mainframe(object):
                             # send
 
                         self.backstore.add(msg)
-                    plug.failure = False
+                    plug.failure = None
 
                 except Exception as e:
                     err = "plugin: {} work failed: {}".format(plug, e)
                     logger.error(err, exc_info=True)
-                    plug.failure = True
+                    plug.failure = e
                     if plug.plugin_configuration["notify_on_error"]:
                         # use message text as mid to prevent multiple
                         # notifications about the same error
@@ -228,12 +228,17 @@ class Mainframe(object):
                     # TODO: maybe print exception?
                     fail = plug.failure
 
-                    if fail:
-                        fail = Termcolors.RED + "error" + Termcolors.RESET
+                    if fail is not None:
+                        if len(str(fail)) > 60:
+                            fail = str(fail)[:57] + "..."
+                        else:
+                            fail = str(fail)
+
+                        fail = Termcolors.RED + str(fail) + Termcolors.RESET
                     else:
                         fail = "ok"
 
-                    status += "{0:20s}: {1} {2}\n".format(plug.name, self.plugin_scheduler.get_duty_cylce(plug), fail)
+                    status += "{0:10s} {1:20s}: {2} {3}\n".format(plug.__class__.__name__, plug.name, self.plugin_scheduler.get_duty_cylce(plug), fail)
 
                 if len(self.plugins) > 0:
                     status += "\n"
@@ -258,5 +263,10 @@ class Mainframe(object):
 
 
 if __name__ == "__main__":
-    Mainframe({"logging_level": logging.DEBUG}).loop()
+    params = {
+        "logging_level": logging.DEBUG,
+        "debug": True
+    }
+
+    Mainframe(params).loop()
     sys.exit(0)
