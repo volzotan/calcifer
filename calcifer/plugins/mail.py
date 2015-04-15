@@ -16,7 +16,6 @@ class Mail(Plugin):
         self.folder = config["folder"]
         self.watchlist = config["watchlist"]
 
-
     def _connect(self):
         self.imap = imaplib.IMAP4_SSL(self.imap_server)
         self.imap.login(self.address, self.password)
@@ -56,7 +55,7 @@ class Mail(Plugin):
 
                 message_list.append(message)
             else:
-                logger.debug("non OK or empty imap response [type: {}]".format(type))
+                logger.debug("{}: non OK or empty imap response [type: {}]".format(self.name, type))
 
         self._close()
         return message_list

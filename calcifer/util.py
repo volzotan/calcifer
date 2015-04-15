@@ -69,7 +69,7 @@ class Message(object):
 class Plugin(object):
 
     plugin_configuration = {}
-    failure = False
+    failure = None
 
     def __init__(self, config):
         pass

@@ -8,10 +8,12 @@ from os.path import isfile, join
 
 import json
 import logging
+import threading
 from Queue import Queue
 
 from util import *
 from socketManager import SocketManager
+#from web import cork
 
 logger = logging.getLogger(__name__)
 
@@ -49,10 +51,11 @@ class Mainframe(object):
         self.plugins = []
         self.plugin_scheduler = Scheduler()
 
+        self.message_queue = Queue()
         self.startup()
 
-        self.queue = Queue()
-        self.socketManager = SocketManager(self.queue)
+        self.socket_queue = Queue()
+        self.socketManager = SocketManager(self.socket_queue)
 
 
     def startup(self):
@@ -64,6 +67,9 @@ class Mainframe(object):
             logger.warn("loading plugins failed", exc_info=True)
 
         # self.register_handlers()
+
+        #cork.global_mainframe = self
+        #cork.app.run()
 
 
     def reload(self):
@@ -172,33 +178,49 @@ class Mainframe(object):
         for plug in self.plugins:
             if self.plugin_scheduler.check(plug):
                 logger.debug("running: {}".format(plug))
-                try:
-                    msglist = plug.work()
 
-                    for msg in msglist:
-                        if not self.backstore.contains(msg):
-                            pass
-                            # send msg
+                t = threading.Thread(target=self.plugin_worker, args=(self.message_queue, plug))
+                t.daemon = True
+                t.start()
 
-                            # process ...
-                        else:
-                            pass
-                            # send
+        while not self.message_queue.empty():
+            wrapper = self.message_queue.get()
+            plugin = wrapper[0]
+            msg = wrapper[1]
 
-                        self.backstore.add(msg)
-                    plug.failure = None
+            if not isinstance(msg, Exception):
+                if not self.backstore.contains(msg):
+                    pass
+                    # send msg
 
-                except Exception as e:
-                    err = "plugin: {} work failed: {}".format(plug, e)
+                    # process ...
+                else:
+                    pass
+                    # send
+
+                self.backstore.add(msg)
+                plug.failure = None
+            else:  # msg is actually an Exception
+                if plugin is not None:
+                    err = "plugin: {} work failed: {}".format(plugin, msg)
                     logger.error(err, exc_info=True)
-                    plug.failure = e
+                    plug.failure = msg
                     if plug.plugin_configuration["notify_on_error"]:
                         # use message text as mid to prevent multiple
                         # notifications about the same error
-                        msg = Message(err, Priority.SILENT, mid=err, sender=self)
-                        self.backstore.add(msg)
+                        errmsg = Message(err, Priority.SILENT, mid=err, sender=self)
+                        self.backstore.add(errmsg)
+                else:
+                    logger.warn("plugin was removed while message was in queue [{}]".format(msg.mid))
 
-                # do sth with all these messages ...
+
+    def plugin_worker(self, queue, plugin):
+        try:
+            msglist = plugin.work()
+            for item in msglist:
+                queue.put((plugin, item))
+        except Exception as e:
+            queue.put((plugin, e))
 
 
     def check_messages(self):
@@ -215,10 +237,10 @@ class Mainframe(object):
 
 
     def check_socket(self):
-        if not self.queue.empty():  # TODO: "it doesn't guarantee that a
-                                    #        subsequent call to put() will not block."
+        if not self.socket_queue.empty():   # TODO: "it doesn't guarantee that a
+                                            #        subsequent call to put() will not block."
 
-            buff = self.queue.get()
+            buff = self.socket_queue.get()
             logger.debug("recv: [{}]".format(buff))
 
             if buff == SocketCommand.STATUS:
