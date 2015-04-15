@@ -58,6 +58,10 @@ class Mainframe(object):
         self.socketManager = SocketManager(self.socket_queue)
 
 
+    def __str__(self):
+        return "mainframe"
+
+
     def startup(self):
         logger.info("Mainframe Startup")
 
@@ -68,8 +72,8 @@ class Mainframe(object):
 
         # self.register_handlers()
 
-        #cork.global_mainframe = self
-        #cork.app.run()
+        # cork.global_mainframe = self
+        # cork.app.run()
 
 
     def reload(self):

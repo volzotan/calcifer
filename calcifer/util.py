@@ -62,8 +62,8 @@ class Message(object):
     def __str__(self):
         return "{} {} |{}| :: {}".format(self.mid, self.priority, self.sender, self.payload[0:25])
 
-    def __repr__(self):
-        return self.__str__()
+    # def __repr__(self):
+    #     return self.__str__()
 
 
 class Plugin(object):
@@ -202,7 +202,7 @@ class Backstore(object):
 
         return counter
 
-    def __repr__(self):
+    def __str__(self):
         status_read = 0
         status_delivered = 0
         status_sent = 0
