@@ -25,8 +25,8 @@ class Mainframe(object):
 
     """params:
 
-    debug: sets logging level to debug and prevents that deliver() is called on plugins
-    logging_level: sets logging level (overwrites debug)
+    debug:          sets logging level to debug and prevents that deliver() is called on plugins
+    logging_level:  sets logging level (overwrites debug)
 
     """
 

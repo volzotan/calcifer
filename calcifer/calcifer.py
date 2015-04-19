@@ -76,25 +76,29 @@ def stop():
 
 #----------------------------------- argparse -----------------------------------#
 
-parser = argparse.ArgumentParser(prog='PROG')
-parser.add_argument("-v", "--verbose", help="increase output verbosity", action="store_true")
-subparsers = parser.add_subparsers(help='help for subcommand')
+def build_parser():
 
-parser_start = subparsers.add_parser('start', help='starts the daemon')
-parser_start.add_argument('-nod', '--no-detach', action="store_true", help='do not detach')
-parser_start.add_argument('-d', '--debug', action="store_true", help='debug mode')
-parser_start.set_defaults(func=start)
+    parser = argparse.ArgumentParser(prog='PROG')
+    parser.add_argument("-v", "--verbose", help="increase output verbosity", action="store_true")
+    subparsers = parser.add_subparsers(help='help for subcommand')
 
-parser_status = subparsers.add_parser('status', help='lay of the land')
-parser_status.set_defaults(func=status)
+    parser_start = subparsers.add_parser('start', help='starts the daemon')
+    parser_start.add_argument('-nod', '--no-detach', action="store_true", help='do not detach')
+    parser_start.add_argument('-d', '--debug', action="store_true", help='debug mode')
+    parser_start.set_defaults(func=start)
 
-parser_reload = subparsers.add_parser('reload', help='reload the plugin config')
-parser_reload.set_defaults(func=reload_config)
+    parser_status = subparsers.add_parser('status', help='lay of the land')
+    parser_status.set_defaults(func=status)
 
-parser_stop = subparsers.add_parser('stop', help='stops the daemon')
-parser_stop.add_argument('-b', type=str, help='help for b')
-parser_stop.add_argument('-c', type=str, action='store', default='', help='test')
-parser_stop.set_defaults(func=stop)
+    parser_reload = subparsers.add_parser('reload', help='reload the plugin config')
+    parser_reload.set_defaults(func=reload_config)
+
+    parser_stop = subparsers.add_parser('stop', help='stops the daemon')
+    parser_stop.add_argument('-b', type=str, help='help for b')
+    parser_stop.add_argument('-c', type=str, action='store', default='', help='test')
+    parser_stop.set_defaults(func=stop)
+
+    return parser
 
 #---------------------------------------------------------------------------------#
 
@@ -102,5 +106,5 @@ if __name__ == "__main__":
     logging.basicConfig(level=logging.DEBUG,
                         format='%(message)s')
 
-    args = parser.parse_args()
+    args = build_parser().parse_args()
     args.func()

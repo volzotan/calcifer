@@ -3,6 +3,11 @@ import unittest
 from calcifer.util import *
 from calcifer.mainframe import *
 
+from calcifer import calcifer
+
+class Skeleton(object):
+    pass
+
 class TestMessage(unittest.TestCase):
 
     def setUp(self):
@@ -21,7 +26,7 @@ class TestMessage(unittest.TestCase):
         msg1 = Message("testpayload")
         msg2 = Message("testpayload")
 
-        self.assertNotEqual(msg1, msg2)
+        self.assertNotEqual(msg1.mid, msg2.mid)
 
 class TestBackstore(unittest.TestCase):
 
@@ -65,16 +70,21 @@ class TestMainframe(unittest.TestCase):
         self.assertEqual(self.mainframe.logging_level, logging.WARN)
         # self.assertEqual(self.mainframe.logger,)
 
-class TestSocketCommunication(unittest.TestCase):
-
-    def setUp(self):
-        pass
-
-    def tearDown(self):
-        pass
-
-    def testStart(self):
-        calcifer.start()
+# class TestSocketCommunication(unittest.TestCase):
+#
+#     def setUp(self):
+#         pass
+#
+#     def tearDown(self):
+#         self.stop()
+#
+#     def test_start(self):
+#         self.calc = calcifer
+#         skeleton = Skeleton()
+#         setattr(skeleton, "debug", True)
+#         setattr(skeleton, "no_detach", False)
+#         self.calc.args = skeleton
+#         self.calc.start()
 
 
 class TestPlugins(unittest.TestCase):
@@ -82,13 +92,4 @@ class TestPlugins(unittest.TestCase):
     def setUp(self):
         pass
 
-    #test every plugin with every conf in ../calcifer/plugins
-
-
-
-# if __name__ == '__main__':
-#     suite = unittest.TestLoader().loadTestsFromTestCase(TestBackstore)
-#     unittest.TextTestRunner(verbosity=2).run(suite)
-
-if __name__ == '__main__':
-    unittest.main()
+    #test initialization of every plugin with every conf in ../calcifer/plugins

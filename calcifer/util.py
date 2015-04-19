@@ -64,13 +64,16 @@ class Message(object):
         pass
 
     def __eq__(self, other):
-        return self.__dict__ == other.__dict__
+        return isinstance(other, self.__class__) and self.mid == other.mid
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
 
     def __str__(self):
         return "{} {} |{}| :: {}".format(self.mid, self.priority, self.sender, self.payload[0:25])
 
-    # def __repr__(self):
-    #     return self.__str__()
+    def __repr__(self):
+        return "{} {}".format(self.__class__, self.mid)
 
 
 class Plugin(object):
@@ -162,7 +165,7 @@ class Backstore(object):
             return False
 
     def get(self, message):
-        return self.data[message.mid]
+        return self.data[message.mid]["message"]
 
     def get_all(self):
         list = []
