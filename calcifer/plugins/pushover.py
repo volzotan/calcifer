@@ -31,10 +31,10 @@ class Pushover(Plugin):
         try:
             self._send(message)
             logger.debug("delivery successful [{}]".format(message.mid))
-            return Status.SENT
+            return Status.sent
         except Exception as e:
             logger.warn("delivery failed", exc_info=True)
-            return Status.FAILED
+            return Status.failed
 
     def check_delivery(self, message):
         # TODO delivery checking for type_req_conf
@@ -46,13 +46,13 @@ class Pushover(Plugin):
                     "message": msg.payload
                   }
 
-        if msg.priority == Priority.SILENT:
+        if msg.priority == Priority.silent:
             options["priority"] = self.TYPE_QUIET
-        elif msg.priority == Priority.LOW:
+        elif msg.priority == Priority.low:
             options["priority"] = self.TYPE_QUIET
-        elif msg.priority == Priority.MEDIUM:
+        elif msg.priority == Priority.medium:
             options["priority"] = self.TYPE_NORMAL
-        elif msg.priority == Priority.HIGH:
+        elif msg.priority == Priority.high:
             # requires retry and expire params
             options["priority"] = self.TYPE_HIGH_PRIORITY
 

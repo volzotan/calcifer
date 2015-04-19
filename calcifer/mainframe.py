@@ -13,7 +13,7 @@ from Queue import Queue
 
 from util import *
 from socketManager import SocketManager
-#from web import cork
+from web import cork
 
 logger = logging.getLogger(__name__)
 
@@ -72,8 +72,10 @@ class Mainframe(object):
 
         # self.register_handlers()
 
-        # cork.global_mainframe = self
-        # cork.app.run()
+        cork.mainframe = self
+        t = threading.Thread(target=cork.app.run)
+        t.daemon = True
+        t.start()
 
 
     def reload(self):
@@ -230,7 +232,7 @@ class Mainframe(object):
     def check_messages(self):
         if not self.backstore.empty():
             for bkstr_obj in self.backstore.get_all():
-                if bkstr_obj["sent_status"] == Status.UNKNOWN:
+                if bkstr_obj["sent_status"] == Status.unknown:
                     for plug in self.plugins:
                         if self.debug is False:
                             sent_code = plug.deliver(bkstr_obj["message"])
@@ -294,5 +296,8 @@ if __name__ == "__main__":
         "debug": True
     }
 
-    Mainframe(params).loop()
+    mf = Mainframe(params)
+    mf.backstore.add(Message("testpayload"))
+    mf.loop()
+
     sys.exit(0)

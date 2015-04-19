@@ -49,9 +49,9 @@ class Mail(Plugin):
                 message.sender = self
 
                 if address in self.watchlist:
-                    message.priority = Priority.MEDIUM
+                    message.priority = Priority.medium
                 else:
-                    message.priority = Priority.LOW
+                    message.priority = Priority.low
 
                 message_list.append(message)
             else:

@@ -1,5 +1,6 @@
 import random
 import datetime
+from enum import Enum
 
 import logging
 
@@ -12,20 +13,20 @@ class SocketCommand(object):
     KILL        = "kill"
     RELOAD      = "reload"
 
-class Priority(object):
-    HIGH        = 30
-    MEDIUM      = 20
-    LOW         = 10
+class Priority(Enum):
+    high        = 30
+    medium      = 20
+    low         = 10
 
-    SILENT      = -1
+    silent      = -1
 
-class Status(object):
-    READ        = 40
-    DELIVERED   = 30
-    SENT        = 20
-    UNKNOWN     = 0
+class Status(Enum):
+    read        = 40
+    delivered   = 30
+    sent        = 20
+    unknown     = 0
 
-    FAILED      = -10
+    failed      = -10
 
 class Termcolors(object):
     RESET       = '\033[0m'
@@ -50,7 +51,7 @@ class Termcolors(object):
 
 
 class Message(object):
-    def __init__(self, payload, priority=Priority.MEDIUM, mid=None, sender=None):
+    def __init__(self, payload, priority=Priority.medium, mid=None, sender=None):
         if mid is None:
             self.mid = str(random.randrange(0, 100000))
         else:
@@ -58,6 +59,12 @@ class Message(object):
         self.payload = payload
         self.priority = priority
         self.sender = sender
+
+    def get_json(self):
+        pass
+
+    def __eq__(self, other):
+        return self.__dict__ == other.__dict__
 
     def __str__(self):
         return "{} {} |{}| :: {}".format(self.mid, self.priority, self.sender, self.payload[0:25])
@@ -126,7 +133,7 @@ class Backstore(object):
     def __init__(self):
         self.data = {}
 
-    def add(self, message, status=Status.UNKNOWN):
+    def add(self, message, status=Status.unknown):
         if message.mid not in self.data:
             tmp = {}
             tmp["message"] = message
@@ -228,19 +235,19 @@ class Backstore(object):
             age = age.total_seconds() / 60
             age = int(age)
 
-            if status == Status.READ:
+            if status == Status.read:
                 status_read += 1
                 status = "READ"
-            elif status == Status.DELIVERED:
+            elif status == Status.delivered:
                 status_delivered += 1
                 status = "DLVRD"
-            elif status == Status.SENT:
+            elif status == Status.sent:
                 status_sent += 1
                 status = "SENT"
-            elif status == Status.UNKNOWN:
+            elif status == Status.unknown:
                 status_unknown += 1
                 status = "UNKNWN"
-            elif status == Status.FAILED:
+            elif status == Status.failed:
                 status_failed += 1
                 status = "FAILED"
 
