@@ -1,3 +1,4 @@
 ccf_*
 calcifer.tar.gz
 calcifer/plugins/*.config
+*.pickle

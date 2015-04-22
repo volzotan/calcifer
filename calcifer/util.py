@@ -1,6 +1,7 @@
 import random
 import datetime
 from enum import Enum
+import pickle
 
 import logging
 
@@ -180,11 +181,21 @@ class Backstore(object):
         else:
             return False
 
+    def clear(self):
+        self.data = {}
+
     def empty(self):
         if len(self.data) > 0:
             return False
         else:
             return True
+
+    def serialize(self, picklefile):
+        pickle.dump(self.data, picklefile)
+
+    def deserialize(self, picklefile):
+        self.data = pickle.load(picklefile)
+
 
     """
     Cleanup deletes every message that was not created or updated for CLEANUP_TIME minutes.
@@ -218,6 +229,8 @@ class Backstore(object):
         status_sent = 0
         status_unknown = 0
         status_failed = 0
+
+        # TODO: don't use mid, it contains no user readable information
 
         tmp = ""
         template = "{0:>3d}|from: {1:<30s} |id: {2:<30s} |length: {3:>4d} |age: {4:>3d} |status: {5:>3s}\n"

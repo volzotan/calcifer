@@ -2,6 +2,7 @@ import daemon
 import os
 import socket
 import argparse
+import sys
 import logging
 
 import mainframe
@@ -32,6 +33,15 @@ def start():
         logger.info("start in debug-mode")
         start_params["debug"] = True
 
+    if args.backstorefile:
+        logger.info("loading backstore pickle")
+        try:
+            picklefile = open(args.backstorefile)
+            start_params["backstore_pickle"] = picklefile
+        except Exception as e:
+            logger.warn("loading backstorefile failed", exc_info=True)
+            sys.exit(-1)
+
     if args.no_detach is True:
         logger.info("start in no-detach-mode")
         _start(start_params)
@@ -48,6 +58,8 @@ def _send(msg):
     except OSError:
         if os.path.exists("/tmp/calcifer_socket_send"):
             raise
+
+    # TODO: don't use datagrams
 
     sock_recv = socket.socket(socket.AF_UNIX, socket.SOCK_DGRAM)
     sock_send = socket.socket(socket.AF_UNIX, socket.SOCK_DGRAM)
@@ -83,8 +95,14 @@ def build_parser():
     subparsers = parser.add_subparsers(help='help for subcommand')
 
     parser_start = subparsers.add_parser('start', help='starts the daemon')
-    parser_start.add_argument('-nod', '--no-detach', action="store_true", help='do not detach')
-    parser_start.add_argument('-d', '--debug', action="store_true", help='debug mode')
+    parser_start.add_argument('-nod', '--no-detach',
+                              action="store_true",
+                              help='do not detach')
+    parser_start.add_argument('-d', '--debug',
+                              action="store_true",
+                              help='debug mode')
+    parser_start.add_argument('-f', '--backstorefile',
+                              help='load a serialized backstore') # TODO wrong argument type
     parser_start.set_defaults(func=start)
 
     parser_status = subparsers.add_parser('status', help='lay of the land')

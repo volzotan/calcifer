@@ -32,6 +32,8 @@ class TestBackstore(unittest.TestCase):
 
     def setUp(self):
         self.backstore = Backstore()
+        self.testmessage = Message("testmessage")
+        self.backstore.add(self.testmessage)
 
     def tearDown(self):
         pass
@@ -45,6 +47,23 @@ class TestBackstore(unittest.TestCase):
 
         self.assertEqual(len(self.backstore.get_all()), 2)
         self.assertEqual(self.backstore.get(msg1), msg1)
+
+    def test_serialize(self):
+        picklefile = open("backstore.pickle", "w")
+        self.backstore.serialize(picklefile)
+
+        self.backstore.clear()
+
+        self.assertEqual(self.backstore.empty(), True)
+
+        #picklefile.close()
+        picklefile = open("backstore.pickle", "r")
+        self.backstore.deserialize(picklefile)
+
+        self.assertEqual(self.backstore.get(self.testmessage), self.testmessage)
+
+    def test_deserialize(self):
+        pass
 
     def test_cleanup(self):
         pass

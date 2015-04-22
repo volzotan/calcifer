@@ -48,6 +48,13 @@ class Mainframe(object):
                             datefmt='%m-%d %H:%M')
 
         self.backstore = Backstore()
+
+        if "backstore_pickle" in params:
+            try:
+                self.backstore.deserialize(params["backstore_pickle"])
+            except Exception as e:
+                logger.warn("deserializing backstorefile failed", exc_info=True)
+
         self.plugins = []
         self.plugin_scheduler = Scheduler()
 
@@ -298,6 +305,11 @@ if __name__ == "__main__":
 
     mf = Mainframe(params)
     mf.backstore.add(Message("testpayload"))
+
+    # picklefile = open("backstore.pickle", "w")
+    # mf.backstore.serialize(picklefile)
+    # picklefile.close()
+
     mf.loop()
 
     sys.exit(0)
