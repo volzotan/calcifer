@@ -207,7 +207,9 @@ class Backstore(object):
     def cleanup(self):
         counter = 0
 
-        for _, item in self.data.iteritems():
+        dellist = []
+
+        for key, item in self.data.iteritems():
             upd = item["update_time"]
             add = item["add_time"]
 
@@ -215,8 +217,11 @@ class Backstore(object):
                 add = upd
 
             if datetime.timedelta(minutes=CLEANUP_TIME) < datetime.datetime.now() - add:
-                del item
-                counter += 1
+                dellist.append(key)
+
+        for key in dellist:
+            del self.data[key]
+            counter += 1
 
         if counter > 0:
             logger.debug("backstore cleanup: {} messages".format(counter))

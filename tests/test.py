@@ -1,5 +1,6 @@
 import unittest
 
+from calcifer import util
 from calcifer.util import *
 from calcifer.mainframe import *
 
@@ -42,6 +43,8 @@ class TestBackstore(unittest.TestCase):
         msg1 = Message("testpayload1")
         msg2 = Message("testpayload2")
 
+        self.backstore.clear()
+
         self.backstore.add(msg1)
         self.backstore.add(msg2)
 
@@ -66,7 +69,20 @@ class TestBackstore(unittest.TestCase):
         pass
 
     def test_cleanup(self):
-        pass
+        add_time = datetime.datetime.now()
+        add_time = add_time - datetime.timedelta(minutes=util.CLEANUP_TIME + 1)
+
+        self.backstore.data = {
+            "examplemid": { "message": self.testmessage,
+                            "add_time": add_time,
+                            "update_time": None,
+                            "sent_status": Status.unknown
+                            }
+        }
+
+        self.assertEqual(len(self.backstore.get_all()), 1)
+        self.assertEqual(self.backstore.cleanup(), 1)
+        self.assertEqual(self.backstore.empty(), True)
 
 
 class TestMainframe(unittest.TestCase):
