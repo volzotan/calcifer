@@ -1,10 +1,8 @@
 import unittest
 
-from calcifer import util
-from calcifer.util import *
-from calcifer.mainframe import *
-
-from calcifer import calcifer
+import util
+from mainframe import *
+from plugins.dummy import Dummy
 
 class Skeleton(object):
     pass
@@ -28,6 +26,17 @@ class TestMessage(unittest.TestCase):
         msg2 = Message("testpayload")
 
         self.assertNotEqual(msg1.mid, msg2.mid)
+
+    def test_JSONencoding(self):
+        sender = Dummy({})
+        sender.name = "dummytestname"
+        msg = Message("testpayload", mid="test", sender=sender)
+
+        print json.dumps(msg, cls=util.MessageJSONEncoder)
+
+    def test_JSONdeconding(self):
+        pass
+
 
 class TestBackstore(unittest.TestCase):
 
@@ -59,7 +68,6 @@ class TestBackstore(unittest.TestCase):
 
         self.assertEqual(self.backstore.empty(), True)
 
-        #picklefile.close()
         picklefile = open("backstore.pickle", "r")
         self.backstore.deserialize(picklefile)
 

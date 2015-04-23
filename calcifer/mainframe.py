@@ -27,6 +27,7 @@ class Mainframe(object):
 
     debug:          sets logging level to debug and prevents that deliver() is called on plugins
     logging_level:  sets logging level (overwrites debug)
+    backstorefile:  pickled backstore data
 
     """
 
@@ -34,7 +35,7 @@ class Mainframe(object):
 
         if "debug" in params and params["debug"] is True:
             self.debug = True
-            logging_level = logging.DEBUG
+            self.logging_level = logging.DEBUG
         else:
             self.debug = False
 

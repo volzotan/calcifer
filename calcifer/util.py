@@ -2,6 +2,7 @@ import random
 import datetime
 from enum import Enum
 import pickle
+import json
 
 import logging
 
@@ -75,6 +76,18 @@ class Message(object):
 
     def __repr__(self):
         return "{} {}".format(self.__class__, self.mid)
+
+
+class MessageJSONEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, Message):
+            return obj.__dict__
+        if isinstance(obj, Priority):
+            return obj.name
+        if isinstance(obj, Plugin):
+            return [type(obj).__name__, obj.name]
+
+        return json.JSONEncoder.default(self, obj)
 
 
 class Plugin(object):
