@@ -10,7 +10,10 @@ class Skeleton(object):
 class TestMessage(unittest.TestCase):
 
     def setUp(self):
-        pass
+        self.testmessage = Message("testmessage")
+
+        self.sender = Dummy({})
+        self.sender.name = "dummytestname"
 
     def tearDown(self):
         pass
@@ -28,14 +31,28 @@ class TestMessage(unittest.TestCase):
         self.assertNotEqual(msg1.mid, msg2.mid)
 
     def test_JSONencoding(self):
-        sender = Dummy({})
-        sender.name = "dummytestname"
-        msg = Message("testpayload", mid="test", sender=sender)
+        msg = Message("testpayload", mid="test", sender=self.sender)
 
         print json.dumps(msg, cls=util.MessageJSONEncoder)
 
-    def test_JSONdeconding(self):
-        pass
+    def test_JSONdecoding(self):
+        testmessages = []
+        encodedmessages = []
+        decodedmessages = []
+
+        testmessages.append(Message("message1"))
+        testmessages.append(Message("message2", mid="123"))
+        testmessages.append(Message("message3", mid="123", priority=Priority.medium))
+        testmessages.append(Message("message4", mid="123", priority=Priority.medium, sender=self.sender))
+
+        for msg in testmessages:
+            tmp = json.dumps(msg, cls=util.MessageJSONEncoder)
+
+            encodedmessages.append(tmp)
+            decodedmessages.append(MessageJSONDecoder().decode(tmp))
+
+        for i in range(0, len(decodedmessages)):
+            self.assertEqual(decodedmessages[i], encodedmessages[i])
 
 
 class TestBackstore(unittest.TestCase):
@@ -136,3 +153,12 @@ class TestPlugins(unittest.TestCase):
         pass
 
     #test initialization of every plugin with every conf in ../calcifer/plugins
+
+
+class TestRestInterface(unittest.TestCase):
+
+    def setUp(self):
+        pass
+
+    def tearDown(self):
+        pass

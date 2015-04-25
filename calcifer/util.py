@@ -90,6 +90,21 @@ class MessageJSONEncoder(json.JSONEncoder):
         return json.JSONEncoder.default(self, obj)
 
 
+class MessageJSONDecoder(object):  # not a proper JSONDecoder
+    def decode(self, obj):
+        pyobj = json.loads(obj)
+
+        priority = pyobj["priority"]
+        priority = Priority[priority]
+
+        sender = pyobj["sender"]
+        # TODO: further brainwork needed
+
+        msg = Message(pyobj["payload"], priority=priority, mid=pyobj["mid"], sender=sender)
+
+        return msg
+
+
 class Plugin(object):
 
     plugin_configuration = {}
