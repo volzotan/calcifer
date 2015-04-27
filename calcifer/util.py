@@ -82,10 +82,13 @@ class MessageJSONEncoder(json.JSONEncoder):
     def default(self, obj):
         if isinstance(obj, Message):
             return obj.__dict__
-        if isinstance(obj, Priority):
-            return obj.name
         if isinstance(obj, Plugin):
             return [type(obj).__name__, obj.name]
+
+        if isinstance(obj, Enum):
+            return obj.name
+        if isinstance(obj, datetime.datetime):
+            return str(obj)
 
         return json.JSONEncoder.default(self, obj)
 
@@ -196,11 +199,24 @@ class Backstore(object):
     def get(self, message):
         return self.data[message.mid]["message"]
 
-    def get_all(self):
+    """
+        returns all stored messages (including backstore metadata)
+    """
+    def get_all_data(self):
         list = []
         if len(self.data) > 0:
             for _, value in self.data.iteritems():
                 list.append(value)
+        return list
+
+    """
+        returns all stored messages (without backstore metadata)
+    """
+    def get_all_messages(self):
+        list = []
+        if len(self.data) > 0:
+            for _, value in self.data.iteritems():
+                list.append(value["message"])
         return list
 
     def contains(self, message):

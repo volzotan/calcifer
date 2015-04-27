@@ -74,7 +74,7 @@ class TestBackstore(unittest.TestCase):
         self.backstore.add(msg1)
         self.backstore.add(msg2)
 
-        self.assertEqual(len(self.backstore.get_all()), 2)
+        self.assertEqual(len(self.backstore.get_all_messages()), 2)
         self.assertEqual(self.backstore.get(msg1), msg1)
 
     def test_serialize(self):
@@ -105,7 +105,7 @@ class TestBackstore(unittest.TestCase):
                             }
         }
 
-        self.assertEqual(len(self.backstore.get_all()), 1)
+        self.assertEqual(len(self.backstore.get_all_messages()), 1)
         self.assertEqual(self.backstore.cleanup(), 1)
         self.assertEqual(self.backstore.empty(), True)
 

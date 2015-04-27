@@ -239,7 +239,7 @@ class Mainframe(object):
 
     def check_messages(self):
         if not self.backstore.empty():
-            for bkstr_obj in self.backstore.get_all():
+            for bkstr_obj in self.backstore.get_all_data():
                 if bkstr_obj["sent_status"] == Status.unknown:
                     for plug in self.plugins:
                         if self.debug is False:

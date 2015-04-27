@@ -3,13 +3,18 @@ from flask import Response
 
 import json
 
+import util
+
 app = Flask(__name__)
 mainframe = None
 
+def _dump(obj):
+    return json.dumps(obj, cls=util.MessageJSONEncoder)
+
 @app.route('/message', methods=['GET'])
 def get_all_messages():
-    msglist = mainframe.backstore.get_all()
-    resp = Response(json.dumps(msglist), mimetype="application/json")
+    msglist = mainframe.backstore.get_all_data()
+    resp = Response(_dump(msglist), mimetype="application/json")
     return resp
 
 
