@@ -196,8 +196,11 @@ class Backstore(object):
         else:
             return False
 
-    def get(self, message):
-        return self.data[message.mid]["message"]
+    def get(self, mid):
+        try:
+            return self.data[mid]["message"]
+        except KeyError:
+            return None
 
     """
         returns all stored messages (including backstore metadata)

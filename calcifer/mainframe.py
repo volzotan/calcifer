@@ -80,8 +80,13 @@ class Mainframe(object):
 
         # self.register_handlers()
 
+        # from OpenSSL import SSL
+        # context = SSL.Context(SSL.SSLv23_METHOD)
+        # context.use_privatekey_file('../cert/key.pem')
+        # context.use_certificate_file('../cert/cert.pem')
+
         cork.mainframe = self
-        t = threading.Thread(target=cork.app.run)
+        t = threading.Thread(target=cork.app.run, kwargs={"host": "127.0.0.1", "port": "5000"})#, "ssl_context": context})
         t.daemon = True
         t.start()
 
@@ -305,7 +310,7 @@ if __name__ == "__main__":
     }
 
     mf = Mainframe(params)
-    mf.backstore.add(Message("testpayload"))
+    mf.backstore.add(Message("testpayload", mid="123"))
 
     # picklefile = open("backstore.pickle", "w")
     # mf.backstore.serialize(picklefile)
