@@ -222,12 +222,6 @@ class Backstore(object):
                 list.append(value["message"])
         return list
 
-    def contains(self, message):
-        if message.mid in self.data:
-            return True
-        else:
-            return False
-
     def clear(self):
         self.data = {}
 
@@ -274,6 +268,12 @@ class Backstore(object):
             logger.debug("backstore cleanup: {} messages".format(counter))
 
         return counter
+
+    def __contains__(self, message):
+        if message.mid in self.data:
+            return True
+        else:
+            return False
 
     def __str__(self):
         status_read = 0

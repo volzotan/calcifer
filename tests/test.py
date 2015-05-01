@@ -93,6 +93,21 @@ class TestBackstore(unittest.TestCase):
     def test_deserialize(self):
         pass
 
+    def test_contains(self):
+        testmsg = Message("testpayload")
+
+        if testmsg in self.backstore:
+            self.assertTrue(False)
+        else:
+            self.assertTrue(True)
+
+        if self.testmessage in self.backstore:
+            self.assertTrue(True)
+        else:
+            self.assertTrue(False)
+
+
+
     def test_cleanup(self):
         add_time = datetime.datetime.now()
         add_time = add_time - datetime.timedelta(minutes=util.CLEANUP_TIME + 1)
