@@ -75,7 +75,7 @@ class TestBackstore(unittest.TestCase):
         self.backstore.add(msg2)
 
         self.assertEqual(len(self.backstore.get_all_messages()), 2)
-        self.assertEqual(self.backstore.get(msg1), msg1)
+        self.assertEqual(self.backstore.get(msg1.mid), msg1)
 
     def test_serialize(self):
         picklefile = open("backstore.pickle", "w")
@@ -88,7 +88,7 @@ class TestBackstore(unittest.TestCase):
         picklefile = open("backstore.pickle", "r")
         self.backstore.deserialize(picklefile)
 
-        self.assertEqual(self.backstore.get(self.testmessage), self.testmessage)
+        self.assertEqual(self.backstore.get(self.testmessage.mid), self.testmessage)
 
     def test_deserialize(self):
         pass

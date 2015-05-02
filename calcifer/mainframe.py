@@ -86,6 +86,8 @@ class Mainframe(object):
         # context.use_certificate_file('../cert/cert.pem')
 
         cork.mainframe = self
+        if self.debug:
+            cork.disable_auth = True
         t = threading.Thread(target=cork.app.run, kwargs={"host": "127.0.0.1", "port": "5000"})#, "ssl_context": context})
         t.daemon = True
         t.start()
@@ -208,7 +210,7 @@ class Mainframe(object):
             msg = wrapper[1]
 
             if not isinstance(msg, Exception):
-                if not self.backstore.contains(msg):
+                if not msg in self.backstore:
                     pass
                     # send msg
 
@@ -227,7 +229,7 @@ class Mainframe(object):
                     if plug.plugin_configuration["notify_on_error"]:
                         # use message text as mid to prevent multiple
                         # notifications about the same error
-                        errmsg = Message(err, Priority.SILENT, mid=err, sender=self)
+                        errmsg = Message(err, Priority.silent, mid=err, sender=self)
                         self.backstore.add(errmsg)
                 else:
                     logger.warn("plugin was removed while message was in queue [{}]".format(msg.mid))

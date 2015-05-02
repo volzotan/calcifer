@@ -1,22 +1,51 @@
 from flask import Flask
 from flask import Response
 from flask import request, abort
+from flask.ext.httpauth import HTTPDigestAuth
 
 import json
 import logging
+from functools import wraps
 
 import util
 
 logger = logging.getLogger(__name__)
-app = Flask(__name__)
 mainframe = None
+disable_auth = False
+
+app = Flask(__name__)
+app.config['SECRET_KEY'] = 'secret key'
+auth = HTTPDigestAuth()
+
+users = {
+    "admin": "admin"
+}
 
 
 def _dump(obj):
     return json.dumps(obj, cls=util.MessageJSONEncoder)
 
 
+def authenticate(func):
+    @wraps(func)
+    def func_wrapper(*args, **kwargs):
+        if not disable_auth:
+            return auth.login_required(func)(*args, **kwargs)
+        else:
+            return func(*args, **kwargs)
+
+    return func_wrapper
+
+
+@auth.get_password
+def _get_pw(username):
+    if username in users:
+        return users.get(username)
+    return None
+
+
 @app.route('/messages/all', methods=['GET'])
+@authenticate
 def get_all_messages():
     msglist = mainframe.backstore.get_all_data()
     resp = Response(_dump(msglist), mimetype="application/json")
@@ -24,12 +53,14 @@ def get_all_messages():
 
 
 @app.route('/messages/get/<mid>', methods=['GET'])
+@authenticate
 def get_message(mid):
     resp = Response(_dump(mainframe.backstore.get(mid)), mimetype="application/json")
     return resp
 
 
 @app.route('/messages/add', methods=['POST'])
+@authenticate
 def add_message():
     """ returns created message with the message id set (if generated) """
     try:
@@ -43,6 +74,7 @@ def add_message():
 
 
 @app.route('/messages/update', methods=['POST'])
+@authenticate
 def update_message():
     pass
 
