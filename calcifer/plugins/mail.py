@@ -31,31 +31,35 @@ class Mail(Plugin):
         message_list = []
 
         (type, data) = self.imap.search(None, '(UNSEEN)')
-        if type == "OK" and data[0] is not None:
-            for num in (data[0].split()):
-                (type, data) = self.imap.fetch(num, '(RFC822)')
-                mailbody = data[0][1]
+        if type == "OK":
+            if data[0] is not None:
+                for num in (data[0].split()):
+                    (type, data) = self.imap.fetch(num, '(RFC822)')
+                    mailbody = data[0][1]
 
-                headers = HeaderParser().parsestr(mailbody)
+                    headers = HeaderParser().parsestr(mailbody)
 
-                address = re.findall("<(.*)>", headers["from"])
-                if len(address) == 0:
-                    address = headers["from"]
-                else:
-                    address = address[0]
+                    address = re.findall("<(.*)>", headers["from"])
+                    if len(address) == 0:
+                        address = headers["from"]
+                    else:
+                        address = address[0]
 
-                message = Message("{} : {}".format(address, headers["subject"]))
-                message.mid = headers["message-id"][1:-1]
-                message.sender = self
+                    message = Message("{} : {}".format(address, headers["subject"]))
+                    message.mid = headers["message-id"][1:-1]
+                    message.sender = self
 
-                if address in self.watchlist:
-                    message.priority = Priority.medium
-                else:
-                    message.priority = Priority.low
+                    if address in self.watchlist:
+                        message.priority = Priority.medium
+                    else:
+                        message.priority = Priority.low
 
-                message_list.append(message)
+                    message_list.append(message)
             else:
-                logger.debug("{}: non OK or empty imap response [type: {}]".format(self.name, type))
+                # logger.debug("{}: empty imap response".format(self.name))
+                pass
+        else:
+            logger.debug("{}: non OK imap response [type: {}]".format(self.name, type))
 
         self._close()
         return message_list

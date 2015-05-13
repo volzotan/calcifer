@@ -62,7 +62,7 @@ def get_message(mid):
 @app.route('/messages/add', methods=['POST'])
 @authenticate
 def add_message():
-    """ returns created message with the message id set (if generated) """
+    """ returns created message with the (optionally generated) message id set """
     try:
         msg = util.MessageJSONDecoder().decode(request.get_json())
         mainframe.backstore.add(msg)
