@@ -62,6 +62,14 @@ class Mainframe(object):
         self.message_queue = Queue()
         self.startup()
 
+        if "cork" in params and params["cork"] is True:
+            cork.mainframe = self
+            if self.debug:
+                cork.disable_auth = True
+            t = threading.Thread(target=cork.app.run, kwargs={"host": "127.0.0.1", "port": 5000})#, "ssl_context": context})
+            t.daemon = True
+            t.start()
+
         self.socket_queue = Queue()
         self.socketManager = SocketManager(self.socket_queue)
 
@@ -84,13 +92,6 @@ class Mainframe(object):
         # context = SSL.Context(SSL.SSLv23_METHOD)
         # context.use_privatekey_file('../cert/key.pem')
         # context.use_certificate_file('../cert/cert.pem')
-
-        cork.mainframe = self
-        if self.debug:
-            cork.disable_auth = True
-        t = threading.Thread(target=cork.app.run, kwargs={"host": "127.0.0.1", "port": "5000"})#, "ssl_context": context})
-        t.daemon = True
-        t.start()
 
 
     def reload(self):
@@ -308,7 +309,8 @@ class Mainframe(object):
 if __name__ == "__main__":
     params = {
         "logging_level": logging.DEBUG,
-        "debug": True
+        "debug": True,
+        "cork": True
     }
 
     mf = Mainframe(params)
