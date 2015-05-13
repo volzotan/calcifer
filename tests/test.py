@@ -1,5 +1,8 @@
 import unittest
 
+import requests
+from requests.auth import HTTPDigestAuth
+
 import util
 from mainframe import *
 from plugins.dummy import Dummy
@@ -160,6 +163,40 @@ class TestMainframe(unittest.TestCase):
 #         setattr(skeleton, "no_detach", False)
 #         self.calc.args = skeleton
 #         self.calc.start()
+
+class TestWeb(unittest.TestCase):
+
+    BASE_URL = "http://localhost:5000"
+
+    def setUp(self):
+        self.mainframe = Mainframe({})
+        self.testmessage = Message("testmessage", mid="123")
+
+    def tearDown(self):
+        self.mainframe.shutdown()
+
+    def test_add(self):
+        pass
+
+        # TODO
+
+    def test_get_all(self):
+        r = requests.get(self.BASE_URL + "/messages/all")
+        self.assertEqual(r.status_code, 401)
+
+        r = requests.get(self.BASE_URL + "/messages/all", auth=HTTPDigestAuth('admin', 'admin'))
+        self.assertEqual(r.status_code, 200)
+
+        # TODO
+
+    def test_get(self):
+        r = requests.get(self.BASE_URL + "/messages/get/" + self.testmessage.mid)
+        self.assertEqual(r.status_code, 401)
+
+        r = requests.get(self.BASE_URL + "/messages/all" + self.testmessage.mid, auth=HTTPDigestAuth('admin', 'admin'))
+        self.assertEqual(r.status_code, 200)
+
+        # TODO
 
 
 class TestPlugins(unittest.TestCase):
