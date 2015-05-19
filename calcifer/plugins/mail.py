@@ -4,6 +4,7 @@ import imaplib
 from email.parser import HeaderParser
 import logging
 import re
+import quopri
 
 logger = logging.getLogger(__name__)
 
@@ -45,7 +46,15 @@ class Mail(Plugin):
                     else:
                         address = address[0]
 
-                    message = Message("{} : {}".format(address, headers["subject"]))
+                    # deal with quoted printable UTF-8 strings (e.g. =?UTF-8?Q?foo? )
+                    subject = headers["subject"]
+                    subject = quopri.decodestring(subject)
+
+                    if subject.startswith("=?UTF-8?Q?"):
+                        subject = subject[10:]  # remove =?UTF-8?Q?
+                        subject = subject[:-1]  # remove trailing '?'
+
+                    message = Message("{} : {}".format(address, subject))
                     message.mid = headers["message-id"][1:-1]
                     message.sender = self
 
