@@ -50,7 +50,7 @@ class Mail(Plugin):
                     subject = headers["subject"]
                     subject = quopri.decodestring(subject)
 
-                    if subject.startswith("=?UTF-8?Q?"):
+                    if subject.upper().startswith("=?UTF-8?Q?"):
                         subject = subject[10:]  # remove =?UTF-8?Q?
                         subject = subject[:-1]  # remove trailing '?'
 
