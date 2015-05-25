@@ -66,7 +66,9 @@ def _send(msg):
     sock_send.bind("/tmp/calcifer_socket_send")
     sock_recv.connect("/tmp/calcifer_socket_recv")
     sock_recv.send(msg)
-    print sock_send.recvfrom(1024)[0]
+    print("")
+    print(sock_send.recvfrom(1024)[0])
+    print("")
     sock_send.close()
     sock_recv.close()
 

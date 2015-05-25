@@ -28,6 +28,7 @@ class Mainframe(object):
     debug:          sets logging level to debug and prevents that deliver() is called on plugins
     logging_level:  sets logging level (overwrites debug)
     backstorefile:  pickled backstore data
+    cork:           enables REST API
 
     """
 
@@ -66,7 +67,7 @@ class Mainframe(object):
             cork.mainframe = self
             if self.debug:
                 cork.disable_auth = True
-            t = threading.Thread(target=cork.app.run, kwargs={"host": "127.0.0.1", "port": 5000})#, "ssl_context": context})
+            t = threading.Thread(target=cork.app.run, kwargs={"host": "127.0.0.1", "port": 5000}) #, "ssl_context": context})
             t.daemon = True
             t.start()
 
@@ -115,6 +116,7 @@ class Mainframe(object):
         try:
             importlib.import_module(dirname)
         except ImportError: # if relative import fails due to exec from diff dir
+            logger.debug("relative import failed")
             dirname = "." + dirname
             importlib.import_module(dirname, package=packagename)
 
@@ -282,7 +284,7 @@ class Mainframe(object):
                     else:
                         fail = "ok"
 
-                    status += "{0:10s} {1:20s}: {2} {3}\n".format(plug.__class__.__name__, plug.name, self.plugin_scheduler.get_duty_cylce(plug), fail)
+                    status += "{0:9s} {1:31s}: {2} {3}\n".format(plug.__class__.__name__, plug.name, self.plugin_scheduler.get_duty_cylce(plug), fail)
 
                 if len(self.plugins) > 0:
                     status += "\n"

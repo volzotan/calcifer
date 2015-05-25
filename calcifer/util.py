@@ -133,6 +133,12 @@ class Plugin(object):
 
 
 class Scheduler(object):
+
+    """ TODO:
+
+        omit multiple runs at once
+    """
+
     def __init__(self):
         self.data = {}
 
@@ -329,6 +335,9 @@ class Backstore(object):
         rval += "FAILED:  " + Termcolors.RED + "{4:2d}" + Termcolors.RESET + "  "
         rval += "->  all:  {5:3d}\n"
         rval = rval.format(status_read, status_delivered, status_sent, status_unknown, status_failed, len(self.data))
+
+        if counter == 0:
+            tmp = "EMPTY"
 
         return rval + tmp
 
