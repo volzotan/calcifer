@@ -1,4 +1,4 @@
-from mainframe import *
+from util import *
 
 import imaplib
 from email.parser import HeaderParser
@@ -23,8 +23,9 @@ class Mail(Plugin):
         self.imap.select(self.folder)
 
     def _close(self):
-        self.imap.close()
-        self.imap.logout()
+        if self.imap is not None:
+            self.imap.close()
+            self.imap.logout()
 
     def work(self):
         self._connect()
@@ -53,6 +54,11 @@ class Mail(Plugin):
                     if subject.upper().startswith("=?UTF-8?Q?"):
                         subject = subject[10:]  # remove =?UTF-8?Q?
                         subject = subject[:-1]  # remove trailing '?'
+
+                    # deal with base64 encoded UTF-8 strings (e.g. =?UTF-8?B?1av3 )
+                    if subject.upper().startswith("=?UTF-8?B?"):
+                        # TODO
+                        pass
 
                     message = Message("{} : {}".format(address, subject))
                     message.mid = headers["message-id"][1:-1]

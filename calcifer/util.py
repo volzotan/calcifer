@@ -6,6 +6,8 @@ import json
 
 import logging
 
+import mainframe
+
 logger = logging.getLogger(__name__)
 
 CLEANUP_TIME = 60  # in minutes
@@ -84,11 +86,12 @@ class MessageJSONEncoder(json.JSONEncoder):
             return obj.__dict__
         if isinstance(obj, Plugin):
             return [type(obj).__name__, obj.name]
-
+        if isinstance(obj, mainframe.Mainframe):
+            return str(obj)
         if isinstance(obj, Enum):
             return obj.name
         if isinstance(obj, datetime.datetime):
-            return str(obj)
+            return str(obj.astimezone(pytz.utc))
 
         return json.JSONEncoder.default(self, obj)
 
