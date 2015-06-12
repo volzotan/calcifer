@@ -1,12 +1,11 @@
 import random
 import datetime
+import pytz
 from enum import Enum
 import pickle
 import json
 
 import logging
-
-import mainframe
 
 logger = logging.getLogger(__name__)
 
@@ -86,8 +85,6 @@ class MessageJSONEncoder(json.JSONEncoder):
             return obj.__dict__
         if isinstance(obj, Plugin):
             return [type(obj).__name__, obj.name]
-        if isinstance(obj, mainframe.Mainframe):
-            return str(obj)
         if isinstance(obj, Enum):
             return obj.name
         if isinstance(obj, datetime.datetime):
@@ -146,7 +143,7 @@ class Scheduler(object):
         self.data = {}
 
     def add(self, plugin, duty_cycle):
-        self.data[plugin] = [duty_cycle, datetime.datetime.now() - datetime.timedelta(seconds=duty_cycle+1)]
+        self.data[plugin] = [duty_cycle, datetime.datetime.now(pytz.utc) - datetime.timedelta(seconds=duty_cycle+1)]
         logger.debug("add schedule: {} -> {}".format(plugin, duty_cycle))
 
     def remove(self, plugin):
@@ -160,7 +157,7 @@ class Scheduler(object):
         duty_cycle = self.data[plugin][0]
         last_update = self.data[plugin][1]
 
-        if last_update < datetime.datetime.now() - datetime.timedelta(seconds=duty_cycle):
+        if last_update < datetime.datetime.now(pytz.utc) - datetime.timedelta(seconds=duty_cycle):
             self.data[plugin][1] = last_update + datetime.timedelta(seconds=duty_cycle)
             return True
         else:
@@ -181,13 +178,13 @@ class Backstore(object):
         if message.mid not in self.data:
             tmp = {}
             tmp["message"] = message
-            tmp["add_time"] = datetime.datetime.now()
+            tmp["add_time"] = datetime.datetime.now(pytz.utc)
             tmp["update_time"] = None
             tmp["sent_status"] = status
             self.data[message.mid] = tmp
         else:
             self.data[message.mid]["message"] = message
-            self.data[message.mid]["update_time"] = datetime.datetime.now()
+            self.data[message.mid]["update_time"] = datetime.datetime.now(pytz.utc)
 
     """
         Updates the message status too
@@ -195,7 +192,7 @@ class Backstore(object):
     """
     def update(self, message, status):
         self.data[message.mid]["message"] = message
-        self.data[message.mid]["update_time"] = datetime.datetime.now()
+        self.data[message.mid]["update_time"] = datetime.datetime.now(pytz.utc)
         self.data[message.mid]["sent_status"] = status
 
     def remove(self, message):
@@ -266,7 +263,7 @@ class Backstore(object):
             if upd is not None:
                 add = upd
 
-            if datetime.timedelta(minutes=CLEANUP_TIME) < datetime.datetime.now() - add:
+            if datetime.timedelta(minutes=CLEANUP_TIME) < datetime.datetime.now(pytz.utc) - add:
                 dellist.append(key)
 
         for key in dellist:
@@ -308,7 +305,7 @@ class Backstore(object):
             length = len(item["message"].payload)
             status = item["sent_status"]
 
-            age = datetime.datetime.now() - item["add_time"]
+            age = datetime.datetime.now(pytz.utc) - item["add_time"]
             age = age.total_seconds() / 60
             age = int(age)
 

@@ -33,6 +33,10 @@ def start():
         logger.info("start in debug-mode")
         start_params["debug"] = True
 
+    if args.cork is True:
+        logger.info("cork enabled")
+        start_params["cork"] = True
+
     if args.backstorefile:
         logger.info("loading backstore pickle")
         try:
@@ -97,14 +101,22 @@ def build_parser():
     subparsers = parser.add_subparsers(help='help for subcommand')
 
     parser_start = subparsers.add_parser('start', help='starts the daemon')
+
     parser_start.add_argument('-nod', '--no-detach',
                               action="store_true",
                               help='do not detach')
+
     parser_start.add_argument('-d', '--debug',
                               action="store_true",
                               help='debug mode')
+
+    parser_start.add_argument('-c', '--cork',
+                              action="store_true",
+                              help='cork. enables REST API and starts werkzeug server')
+
     parser_start.add_argument('-f', '--backstorefile',
                               help='load a serialized backstore') # TODO wrong argument type
+
     parser_start.set_defaults(func=start)
 
     parser_status = subparsers.add_parser('status', help='lay of the land')

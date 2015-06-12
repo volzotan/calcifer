@@ -232,7 +232,7 @@ class Mainframe(object):
                     if plug.plugin_configuration["notify_on_error"]:
                         # use message text as mid to prevent multiple
                         # notifications about the same error
-                        errmsg = Message(err, Priority.silent, mid=err, sender=self)
+                        errmsg = Message(err, Priority.silent, mid=err, sender=str(self))
                         self.backstore.add(errmsg)
                 else:
                     logger.warn("plugin was removed while message was in queue [{}]".format(msg.mid))
@@ -316,7 +316,9 @@ if __name__ == "__main__":
     }
 
     mf = Mainframe(params)
+
     mf.backstore.add(Message("testpayload", mid="123"))
+    mf.backstore.add(Message("testpayload2", mid="124"))
 
     # picklefile = open("backstore.pickle", "w")
     # mf.backstore.serialize(picklefile)
