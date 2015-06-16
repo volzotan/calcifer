@@ -70,12 +70,35 @@ def add_message():
         return resp
     except Exception as e:
         logger.warn("/messages/add failed", exc_info=True)
-        abort(400)
+        return abort(400)
 
 
 @app.route('/messages/update', methods=['POST'])
 @authenticate
 def update_message():
-    pass
+    return
+
+
+@app.route('/messages/setasread', methods=['POST'])
+@authenticate
+def set_multiple_messages_as_read():
+    try:
+        json = request.get_json()
+
+        if json["ids"] is None:
+            raise Exception("no ids submitted")
+    except Exception as e:
+        logger.error("corrupted request data", exc_info=True)
+        return abort(400)
+
+    for id in json["ids"]:
+
+        try:
+            mainframe.backstore.update_status(id, util.Status.read)
+        except LookupError as e:
+            logger.info("messages/setasread message not found [{}]".format(id))
+            continue
+
+    return Response()
 
 

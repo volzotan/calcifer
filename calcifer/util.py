@@ -175,7 +175,7 @@ class Backstore(object):
         self.data = {}
 
     def add(self, message, status=Status.unknown):
-        if message.mid not in self.data:
+        if message not in self:
             tmp = {}
             tmp["message"] = message
             tmp["add_time"] = datetime.datetime.now(pytz.utc)
@@ -187,13 +187,14 @@ class Backstore(object):
             self.data[message.mid]["update_time"] = datetime.datetime.now(pytz.utc)
 
     """
-        Updates the message status too
-        while /add/ ignores status when a duplicate message is added
+        Updates the message status
     """
-    def update(self, message, status):
-        self.data[message.mid]["message"] = message
-        self.data[message.mid]["update_time"] = datetime.datetime.now(pytz.utc)
-        self.data[message.mid]["sent_status"] = status
+    def update_status(self, mid, status):
+        if mid in self.data:
+            self.data[mid]["update_time"] = datetime.datetime.now(pytz.utc)
+            self.data[mid]["sent_status"] = status
+        else:
+            raise LookupError("message not in backstore")
 
     def remove(self, message):
         if message.mid in self.data:
