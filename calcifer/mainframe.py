@@ -67,7 +67,16 @@ class Mainframe(object):
             cork.mainframe = self
             if self.debug:
                 cork.disable_auth = True
-            t = threading.Thread(target=cork.app.run, kwargs={"host": "127.0.0.1", "port": 5000}) #, "ssl_context": context})
+
+            from OpenSSL import SSL
+            # context = SSL.Context(SSL.SSLv23_METHOD)
+            # context.use_privatekey_file('../cert/key.pem')
+            # context.use_certificate_file('../cert/cert.pem')
+
+            # context = ('../cert/cert.pem', '../cert/key.pem')
+            context = "adhoc"
+
+            t = threading.Thread(target=cork.app.run, kwargs={"host": "127.0.0.1", "port": 5000, "ssl_context": context})
             t.daemon = True
             t.start()
 
@@ -88,11 +97,6 @@ class Mainframe(object):
             logger.warn("loading plugins failed", exc_info=True)
 
         # self.register_handlers()
-
-        # from OpenSSL import SSL
-        # context = SSL.Context(SSL.SSLv23_METHOD)
-        # context.use_privatekey_file('../cert/key.pem')
-        # context.use_certificate_file('../cert/cert.pem')
 
 
     def reload(self):
