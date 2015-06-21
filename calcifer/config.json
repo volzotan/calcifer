@@ -1,0 +1,12 @@
+{
+
+    "debug": false,
+    "backstorefile": "",
+    "cork": {
+        "enabled": true,
+        "authentication" : {
+            "foo": "bar"
+        }
+    }
+
+}

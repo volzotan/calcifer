@@ -25,6 +25,7 @@ class Mainframe(object):
 
     """params:
 
+    config:         configuration file path
     debug:          sets logging level to debug and prevents that deliver() is called on plugins
     logging_level:  sets logging level (overwrites debug)
     backstorefile:  pickled backstore data
@@ -32,30 +33,79 @@ class Mainframe(object):
 
     """
 
-    def __init__(self, params):
+    def load_config(self, params):
+        config = Config()
+        jsonconf = None
+
+        if "config" in params:
+            if isfile(params["config"]):
+                try:
+                    jsonconf = json.load(open(params["config"]))
+                except Exception as e:
+                    logger.error("config file {} could not be parsed as valid json".format(params["config"]))
+            else:
+                logger.error("no config file found on given path: {}".format(params["config"]))
+
+        if jsonconf is None:
+            logger.info("no config path found, using default")
+            try:
+                jsonconf = json.load(open("config.json"))
+
+                if "debug" in jsonconf and jsonconf["debug"] is True:
+                    config.debug = True
+                    config.logging_level = logging.DEBUG
+
+                if "logging_level" in jsonconf:
+                    config.logging_level = jsonconf["logging_level"]
+
+                if "backstorefile" in jsonconf and len(jsonconf["backstorefile"]) > 0:
+                    config.backstorefile = jsonconf["backstorefile"]
+
+                if "cork" in jsonconf and "enabled" in jsonconf["cork"] and jsonconf["cork"]["enabled"] is True:
+                    config.cork["enabled"] = True
+                    if "authentication" in jsonconf["cork"] and len(jsonconf["cork"]["authentication"]) > 0:
+                        config.cork["authentication"] = jsonconf["cork"]["authentication"]
+                    else:
+                        logger.warn("cork enabled but no authentication data was present")
+
+            except Exception as e:
+                logger.warn("loading default config file failed", exc_info=True)
+
 
         if "debug" in params and params["debug"] is True:
-            self.debug = True
-            self.logging_level = logging.DEBUG
-        else:
-            self.debug = False
+            config.debug = True
+            config.logging_level = logging.DEBUG
 
         if "logging_level" in params:
-            self.logging_level = params["logging_level"]
-        else:
-            self.logging_level = logging.INFO
+            config.logging_level = params["logging_level"]
 
-        logging.basicConfig(level=self.logging_level,
+        if "backstore_pickle" in params:
+            config.backstorefile = params["backstore_pickle"]
+
+        if "cork" in params and params["cork"] is True:
+            config.cork["enabled"] = True
+            # TODO auth data via command line
+
+        return config
+
+
+    def __init__(self, params):
+
+        # logging needs to be initialized before the log file gets parsed
+        logging.basicConfig(level=Config.logging_level,
                             format='%(asctime)s %(name)-20s %(levelname)-8s %(message)s',
                             datefmt='%m-%d %H:%M')
 
+        self.config = self.load_config(params)
+        logger.setLevel(self.config.logging_level)
+
         self.backstore = Backstore()
 
-        if "backstore_pickle" in params:
+        if self.config.backstorefile is not None:
             try:
-                self.backstore.deserialize(params["backstore_pickle"])
+                self.backstore.deserialize(self.config.backstorefile)
             except Exception as e:
-                logger.warn("deserializing backstorefile failed", exc_info=True)
+                logger.warn("deserializing backstorefile {} failed".format(self.config.backstorefile), exc_info=True)
 
         self.plugins = []
         self.plugin_scheduler = Scheduler()
@@ -63,10 +113,11 @@ class Mainframe(object):
         self.message_queue = Queue()
         self.startup()
 
-        if "cork" in params and params["cork"] is True:
+        if self.config.cork is not None and self.config.cork["enabled"] is True:
             cork.mainframe = self
-            if self.debug:
-                cork.disable_auth = True
+            cork.users = self.config.cork["authentication"]
+            # if self.config.debug:
+            #     cork.disable_auth = True
 
             from OpenSSL import SSL
             # context = SSL.Context(SSL.SSLv23_METHOD)
@@ -256,7 +307,7 @@ class Mainframe(object):
             for bkstr_obj in self.backstore.get_all_data():
                 if bkstr_obj["sent_status"] == Status.unknown:
                     for plug in self.plugins:
-                        if self.debug is False:
+                        if self.config.debug is False:
                             sent_code = plug.deliver(bkstr_obj["message"])
                             self.backstore.update(bkstr_obj["message"], status=sent_code)
                 else:

@@ -17,9 +17,7 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = 'secret key'
 auth = HTTPDigestAuth()
 
-users = {
-    "admin": "admin"
-}
+users = {}
 
 
 def _dump(obj):
