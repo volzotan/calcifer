@@ -112,7 +112,7 @@ class TestBackstore(unittest.TestCase):
 
 
     def test_cleanup(self):
-        add_time = datetime.datetime.now()
+        add_time = datetime.datetime.now(pytz.utc)
         add_time = add_time - datetime.timedelta(minutes=util.CLEANUP_TIME + 1)
 
         self.backstore.data = {
@@ -144,9 +144,13 @@ class TestMainframe(unittest.TestCase):
 
         self.mainframe = Mainframe(params)
 
-        self.assertEqual(self.mainframe.debug, True)
-        self.assertEqual(self.mainframe.logging_level, logging.WARN)
+        self.assertEqual(self.mainframe.config.debug, True)
+        self.assertEqual(self.mainframe.config.logging_level, logging.WARN)
         # self.assertEqual(self.mainframe.logger,)
+
+    def test_config(self):
+        pass
+        # TODO
 
 # class TestSocketCommunication(unittest.TestCase):
 #

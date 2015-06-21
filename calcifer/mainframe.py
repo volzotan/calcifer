@@ -69,7 +69,10 @@ class Mainframe(object):
                         logger.warn("cork enabled but no authentication data was present")
 
             except Exception as e:
-                logger.warn("loading default config file failed", exc_info=True)
+                if logger.level <= logging.DEBUG:
+                    logger.debug("loading default config file failed", exc_info=True)
+                else:
+                    logger.warn("loading default config file failed")
 
 
         if "debug" in params and params["debug"] is True:
