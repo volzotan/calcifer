@@ -64,15 +64,20 @@ class Mainframe(object):
                 if "cork" in jsonconf and "enabled" in jsonconf["cork"] and jsonconf["cork"]["enabled"] is True:
                     config.cork["enabled"] = True
 
-                    if "SSL" in jsonconf["cork"] and jsonconf["cork"]["SSL"] is False:
-                        config.cork["SSL"] = False
+                    if "host" in jsonconf["cork"]:
+                        config.cork["host"] = jsonconf["cork"]["host"]
                     else:
-                        config.cork["SSL"] = True
+                        config.cork["host"] = "localhost"
 
                     if "port" in jsonconf["cork"]:
                         config.cork["port"] = int(jsonconf["cork"]["port"])
                     else:
                         config.cork["port"] = 5000
+
+                    if "SSL" in jsonconf["cork"] and jsonconf["cork"]["SSL"] is False:
+                        config.cork["SSL"] = False
+                    else:
+                        config.cork["SSL"] = True
 
                     if "authentication" in jsonconf["cork"] and len(jsonconf["cork"]["authentication"]) > 0:
                         config.cork["authentication"] = jsonconf["cork"]["authentication"]
@@ -140,9 +145,9 @@ class Mainframe(object):
 
             if self.config.cork["SSL"] is True:
                 from OpenSSL import SSL
-                t = threading.Thread(target=cork.app.run, kwargs={"host": "127.0.0.1", "port": self.config.cork["port"], "ssl_context": context})
+                t = threading.Thread(target=cork.app.run, kwargs={"host": self.config.cork["host"], "port": self.config.cork["port"], "ssl_context": context})
             else:
-                t = threading.Thread(target=cork.app.run, kwargs={"host": "127.0.0.1", "port": self.config.cork["port"]})
+                t = threading.Thread(target=cork.app.run, kwargs={"host": self.config.cork["host"], "port": self.config.cork["port"]})
 
             t.daemon = True
             t.start()

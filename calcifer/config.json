@@ -4,6 +4,7 @@
     "backstorefile": "",
     "cork": {
         "enabled": true,
+        "host": "localhost",
         "port": 5000,
         "SSL": false,
         "authentication" : {
