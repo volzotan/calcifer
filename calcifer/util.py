@@ -113,6 +113,8 @@ class Config(object):
     logging_level = logging.INFO
     backstorefile = None
     cork = {"enabled" : False,
+            "host": "localhost",
+            "port": 5000,
             "SSL": True,
             "authentication": {}
             }
@@ -158,8 +160,10 @@ class Scheduler(object):
     def remove(self, plugin):
         if plugin in self.data:
             del self.data[plugin]
+            logger.debug("removed from scheduler: {}".format(plugin))
             return True
         else:
+            logger.debug("remove, but plugin not in scheduler: {}".format(plugin))
             return False
 
     def check(self, plugin):
@@ -208,8 +212,10 @@ class Backstore(object):
     def remove(self, message):
         if message.mid in self.data:
             del self.data[message.mid]
+            logger.debug("message removed: {}".format(message))
             return True
         else:
+            logger.debug("remove non existant message: {}".format(message))
             return False
 
     def get(self, mid):
@@ -239,6 +245,7 @@ class Backstore(object):
         return list
 
     def clear(self):
+        logger.debug("backstore cleared")
         self.data = {}
 
     def empty(self):
@@ -249,9 +256,11 @@ class Backstore(object):
 
     def serialize(self, picklefile):
         pickle.dump(self.data, picklefile)
+        logger.debug("backstore serialized to picklefile: {}".format(picklefile))
 
     def deserialize(self, picklefile):
         self.data = pickle.load(picklefile)
+        logger.debug("loaded backstorefile: {}".format(picklefile))
 
 
     """

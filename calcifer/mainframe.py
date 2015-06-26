@@ -41,6 +41,7 @@ class Mainframe(object):
             if isfile(params["config"]):
                 try:
                     jsonconf = json.load(open(params["config"]))
+                    logger.debug("config file {} loaded".format(params["config"]))
                 except Exception as e:
                     logger.error("config file {} could not be parsed as valid json".format(params["config"]))
             else:
@@ -50,6 +51,9 @@ class Mainframe(object):
             logger.info("no config path found, using default")
             try:
                 jsonconf = json.load(open("config.json"))
+
+                # if given option is present in configuration file,
+                # overwrite default from util.Config
 
                 if "debug" in jsonconf and jsonconf["debug"] is True:
                     config.debug = True
@@ -66,23 +70,21 @@ class Mainframe(object):
 
                     if "host" in jsonconf["cork"]:
                         config.cork["host"] = jsonconf["cork"]["host"]
-                    else:
-                        config.cork["host"] = "localhost"
 
                     if "port" in jsonconf["cork"]:
                         config.cork["port"] = int(jsonconf["cork"]["port"])
-                    else:
-                        config.cork["port"] = 5000
 
                     if "SSL" in jsonconf["cork"] and jsonconf["cork"]["SSL"] is False:
                         config.cork["SSL"] = False
-                    else:
-                        config.cork["SSL"] = True
 
                     if "authentication" in jsonconf["cork"] and len(jsonconf["cork"]["authentication"]) > 0:
                         config.cork["authentication"] = jsonconf["cork"]["authentication"]
                     else:
                         logger.warn("cork enabled but no authentication data was present")
+                else:
+                    logger.debug("cork was not enabled by configuration file")
+
+                logger.debug("default config file loaded")
 
             except Exception as e:
                 if logger.level <= logging.DEBUG:
@@ -94,6 +96,7 @@ class Mainframe(object):
         if "debug" in params and params["debug"] is True:
             config.debug = True
             config.logging_level = logging.DEBUG
+            logging.info("DEBUG ACTIVATED")
 
         if "logging_level" in params:
             config.logging_level = params["logging_level"]
@@ -111,7 +114,12 @@ class Mainframe(object):
     def __init__(self, params):
 
         # logging needs to be initialized before the log file gets parsed
-        logging.basicConfig(level=Config.logging_level,
+        default_logging_level = Config.logging_level
+
+        if "logging_level" in params:
+           default_logging_level = params["logging_level"]
+
+        logging.basicConfig(level=default_logging_level,
                             format='%(asctime)s %(name)-20s %(levelname)-8s %(message)s',
                             datefmt='%m-%d %H:%M')
 
@@ -133,6 +141,7 @@ class Mainframe(object):
         self.startup()
 
         if self.config.cork is not None and self.config.cork["enabled"] is True:
+            logger.debug("initializing cork (SSL: {})".format(self.config.cork["SSL"]))
             cork.mainframe = self
             cork.users = self.config.cork["authentication"]
 
@@ -154,6 +163,7 @@ class Mainframe(object):
 
         self.socket_queue = Queue()
         self.socketManager = SocketManager(self.socket_queue)
+        logger.debug("mainframe initialization ended")
 
 
     def __str__(self):
@@ -161,7 +171,7 @@ class Mainframe(object):
 
 
     def startup(self):
-        logger.info("Mainframe Startup")
+        logger.info("mainframe startup")
 
         try:
             self.load_all_modules_from_dir(DIRECTORY, PACKAGE)
@@ -178,7 +188,7 @@ class Mainframe(object):
 
 
     def shutdown(self):
-        logger.info("Mainframe Shutdown")
+        logger.info("mainframe shutdown")
 
         for elem in self.plugins:
             elem.close()
