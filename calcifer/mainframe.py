@@ -63,6 +63,17 @@ class Mainframe(object):
 
                 if "cork" in jsonconf and "enabled" in jsonconf["cork"] and jsonconf["cork"]["enabled"] is True:
                     config.cork["enabled"] = True
+
+                    if "SSL" in jsonconf["cork"] and jsonconf["cork"]["SSL"] is False:
+                        config.cork["SSL"] = False
+                    else:
+                        config.cork["SSL"] = True
+
+                    if "port" in jsonconf["cork"]:
+                        config.cork["port"] = int(jsonconf["cork"]["port"])
+                    else:
+                        config.cork["port"] = 5000
+
                     if "authentication" in jsonconf["cork"] and len(jsonconf["cork"]["authentication"]) > 0:
                         config.cork["authentication"] = jsonconf["cork"]["authentication"]
                     else:
@@ -119,10 +130,7 @@ class Mainframe(object):
         if self.config.cork is not None and self.config.cork["enabled"] is True:
             cork.mainframe = self
             cork.users = self.config.cork["authentication"]
-            # if self.config.debug:
-            #     cork.disable_auth = True
 
-            from OpenSSL import SSL
             # context = SSL.Context(SSL.SSLv23_METHOD)
             # context.use_privatekey_file('../cert/key.pem')
             # context.use_certificate_file('../cert/cert.pem')
@@ -130,7 +138,12 @@ class Mainframe(object):
             # context = ('../cert/cert.pem', '../cert/key.pem')
             context = "adhoc"
 
-            t = threading.Thread(target=cork.app.run, kwargs={"host": "127.0.0.1", "port": 5000, "ssl_context": context})
+            if self.config.cork["SSL"] is True:
+                from OpenSSL import SSL
+                t = threading.Thread(target=cork.app.run, kwargs={"host": "127.0.0.1", "port": self.config.cork["port"], "ssl_context": context})
+            else:
+                t = threading.Thread(target=cork.app.run, kwargs={"host": "127.0.0.1", "port": self.config.cork["port"]})
+
             t.daemon = True
             t.start()
 

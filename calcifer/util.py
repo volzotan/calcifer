@@ -113,6 +113,7 @@ class Config(object):
     logging_level = logging.INFO
     backstorefile = None
     cork = {"enabled" : False,
+            "SSL": True,
             "authentication": {}
             }
 

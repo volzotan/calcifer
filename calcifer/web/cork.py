@@ -74,7 +74,7 @@ def add_message():
 @app.route('/messages/update', methods=['POST'])
 @authenticate
 def update_message():
-    return
+    return abort(500)
 
 
 @app.route('/messages/setasread', methods=['POST'])
