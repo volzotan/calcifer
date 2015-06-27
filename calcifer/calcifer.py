@@ -10,8 +10,8 @@ from util import SocketCommand, Termcolors
 
 logger = logging.getLogger(__name__)
  
-logfile = open('ccf_logfile', 'w+')
-errfile = open('ccf_errfile', 'w+')
+logfile = open('ccf_logfile', 'a+')
+errfile = open('ccf_errfile', 'a+')
 
 context = daemon.DaemonContext()
 context.stdout = logfile

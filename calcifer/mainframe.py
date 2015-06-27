@@ -163,7 +163,7 @@ class Mainframe(object):
 
         self.socket_queue = Queue()
         self.socketManager = SocketManager(self.socket_queue)
-        logger.debug("mainframe initialization ended")
+        logger.info("mainframe initialization ended")
 
 
     def __str__(self):
@@ -289,7 +289,7 @@ class Mainframe(object):
             if self.plugin_scheduler.check(plug):
                 logger.debug("running: {}".format(plug))
 
-                t = threading.Thread(target=self.plugin_worker, args=(self.message_queue, plug))
+                t = threading.Thread(target=self._plugin_worker, args=(self.message_queue, plug))
                 t.daemon = True
                 t.start()
 
@@ -324,12 +324,16 @@ class Mainframe(object):
                     logger.warn("plugin was removed while message was in queue [{}]".format(msg.mid))
 
 
-    def plugin_worker(self, queue, plugin):
+    def _plugin_worker(self, queue, plugin):
         try:
             msglist = plugin.work()
+            if len(msglist) != 0:
+                logger.debug("plugin {} produced {} message(s)".format(plugin.name, len(msglist)))
+
             for item in msglist:
                 queue.put((plugin, item))
         except Exception as e:
+            logger.error("plugin.work produced error", exc_info=True)
             queue.put((plugin, e))
 
 
