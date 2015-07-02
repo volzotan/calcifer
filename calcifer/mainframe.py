@@ -333,7 +333,7 @@ class Mainframe(object):
             for item in msglist:
                 queue.put((plugin, item))
         except Exception as e:
-            logger.error("plugin.work produced error", exc_info=True)
+            logger.error("plugin.work() produced error", exc_info=True)
             queue.put((plugin, e))
 
 
@@ -342,9 +342,9 @@ class Mainframe(object):
             for bkstr_obj in self.backstore.get_all_data():
                 if bkstr_obj["sent_status"] == Status.unknown:
                     for plug in self.plugins:
-                        if self.config.debug is False:
+                        if not self.config.debug:
                             sent_code = plug.deliver(bkstr_obj["message"])
-                            self.backstore.update(bkstr_obj["message"], status=sent_code)
+                            self.backstore.update_status(bkstr_obj["message"].mid, status=sent_code)
                 else:
                     pass
                     # check for delivery
@@ -359,6 +359,9 @@ class Mainframe(object):
 
             if buff == SocketCommand.STATUS:
                 status = ""
+
+                if self.config.debug:
+                    status += "DEBUG MODE ENABLED"
 
                 for plug in self.plugins:
                     # TODO: maybe print exception?
