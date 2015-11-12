@@ -13,13 +13,24 @@ class Mail(Plugin):
     def __init__(self, config):
         self.imap_server = config["imap_server"]
         self.address = config["mailaddress"]
+
+        self.username = None
+        try:
+            if config["username"] is not None:
+                self.username = config["username"]
+        except:
+            pass
+
         self.password = config["imap_password"]
         self.folder = config["folder"]
         self.watchlist = config["watchlist"]
 
     def _connect(self):
         self.imap = imaplib.IMAP4_SSL(self.imap_server)
-        self.imap.login(self.address, self.password)
+        if self.username is not None:
+            self.imap.login(self.username, self.password)
+        else:
+            self.imap.login(self.address, self.password)
         self.imap.select(self.folder)
 
     def _close(self):
