@@ -4,6 +4,7 @@ import imaplib
 from email.parser import HeaderParser
 import logging
 import re
+import fnmatch
 import quopri
 
 logger = logging.getLogger(__name__)
@@ -75,10 +76,10 @@ class Mail(Plugin):
                     message.mid = headers["message-id"][1:-1]
                     message.sender = self
 
-                    if address in self.watchlist:
-                        message.priority = Priority.medium
-                    else:
-                        message.priority = Priority.low
+                    message.priority = Priority.low
+                    for elem in self.watchlist:
+                        if fnmatch.fnmatch(address, elem): # shell like globbing
+                            message.priority = Priority.medium
 
                     message_list.append(message)
             else:
