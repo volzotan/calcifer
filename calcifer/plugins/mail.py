@@ -2,10 +2,10 @@ from util import *
 
 import imaplib
 from email.parser import HeaderParser
+from email import header
 import logging
 import re
 import fnmatch
-import quopri
 
 logger = logging.getLogger(__name__)
 
@@ -59,18 +59,11 @@ class Mail(Plugin):
                     else:
                         address = address[0]
 
-                    # deal with quoted printable UTF-8 strings (e.g. =?UTF-8?Q?foo? )
                     subject = headers["subject"]
-                    subject = quopri.decodestring(subject)
-
-                    if subject.upper().startswith("=?UTF-8?Q?"):
-                        subject = subject[10:]  # remove =?UTF-8?Q?
-                        subject = subject[:-1]  # remove trailing '?'
 
                     # deal with base64 encoded UTF-8 strings (e.g. =?UTF-8?B?1av3 )
-                    if subject.upper().startswith("=?UTF-8?B?"):
-                        # TODO
-                        pass
+                    # deal with quoted printable UTF-8 strings (e.g. =?UTF-8?Q?foo? )
+                    subject = header.decode_header(subject)[0][0]
 
                     message = Message("{} : {}".format(address, subject))
                     message.mid = headers["message-id"][1:-1]
