@@ -139,6 +139,9 @@ class Plugin(object):
     def close(self):
         pass
 
+    def get_generic_name(self):
+        return self.__class__.__name__
+
     def __str__(self):
         return self.name
 

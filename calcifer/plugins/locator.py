@@ -4,7 +4,6 @@ from pyicloud import PyiCloudService
 
 logger = logging.getLogger(__name__)
 
-
 class Locator(Plugin):
     
     def __init__(self, config):

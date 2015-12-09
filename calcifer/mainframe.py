@@ -312,7 +312,7 @@ class Mainframe(object):
                 plug.failure = None
             else:  # msg is actually an Exception
                 if plugin is not None:
-                    err = "plugin: {} work failed: {}".format(plugin, msg)
+                    err = "plugin: {} {} work failed: {}".format(plugin.get_generic_name(), plugin, msg)
                     logger.error(err, exc_info=True)
                     plug.failure = msg
                     if plug.plugin_configuration["notify_on_error"]:
@@ -328,7 +328,7 @@ class Mainframe(object):
         try:
             msglist = plugin.work()
             if len(msglist) != 0:
-                logger.debug("plugin {} produced {} message(s)".format(plugin.name, len(msglist)))
+                logger.debug("plugin {} {} produced {} message(s)".format(plugin.get_generic_name(), plugin.name, len(msglist)))
 
             for item in msglist:
                 queue.put((plugin, item))
@@ -377,7 +377,7 @@ class Mainframe(object):
                     else:
                         fail = "ok"
 
-                    status += "{0:9s} {1:31s}: {2} {3}\n".format(plug.__class__.__name__, plug.name, self.plugin_scheduler.get_duty_cylce(plug), fail)
+                    status += "{0:9s} {1:31s}: {2} {3}\n".format(plug.get_generic_name(), plug.name, self.plugin_scheduler.get_duty_cylce(plug), fail)
 
                 if len(self.plugins) > 0:
                     status += "\n"
