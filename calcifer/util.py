@@ -107,17 +107,6 @@ class MessageJSONDecoder(object):  # not a proper JSONDecoder
 
         return msg
 
-class Config(object):
-
-    debug = False
-    logging_level = logging.INFO
-    backstorefile = None
-    cork = {"enabled" : False,
-            "host": "localhost",
-            "port": 5000,
-            "SSL": True,
-            "authentication": {}
-            }
 
 class Plugin(object):
 
