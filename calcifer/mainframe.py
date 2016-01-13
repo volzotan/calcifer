@@ -408,7 +408,7 @@ class Mainframe(object):
 if __name__ == "__main__":
     params = {
         "logging_level": logging.DEBUG,
-        #"debug": True,
+        "debug": True,
         "quiet": True,
         "cork": True
     }
