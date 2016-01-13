@@ -1,4 +1,5 @@
 from util import *
+import config
 
 import requests
 import logging
@@ -27,7 +28,12 @@ class Pushover(Plugin):
         self.url = config["url"]
 
     def deliver(self, message):
-        # ignore priority
+
+        if config.quiet:  # mainframe config
+            if message.priority is not Priority.high:
+                logger.debug("dropped message due to quiet mode [{}]".format(message.mid))
+                return Status.sent  # drop message
+
         try:
             self._send(message)
             logger.debug("delivery successful [{}]".format(message.mid))
@@ -53,7 +59,7 @@ class Pushover(Plugin):
         elif msg.priority == Priority.medium:
             options["priority"] = self.TYPE_NORMAL
         elif msg.priority == Priority.high:
-            # requires retry and expire params
+            # TODO: requires retry and expire params
             options["priority"] = self.TYPE_HIGH_PRIORITY
 
         r = requests.post(self.url, params=options)

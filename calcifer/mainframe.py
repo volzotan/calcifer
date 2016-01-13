@@ -11,6 +11,7 @@ import logging
 import threading
 from Queue import Queue
 
+import config
 from util import *
 from socketManager import SocketManager
 from web import cork
@@ -29,12 +30,12 @@ class Mainframe(object):
     debug:          sets logging level to debug and prevents that deliver() is called on plugins
     logging_level:  sets logging level (overwrites debug)
     backstorefile:  pickled backstore data
+    quiet:          should be honored by plugins, results may differ
     cork:           enables REST API
 
     """
 
     def load_config(self, params):
-        config = Config()
         jsonconf = None
 
         if "config" in params:
@@ -53,7 +54,7 @@ class Mainframe(object):
                 jsonconf = json.load(open("config.json"))
 
                 # if given option is present in configuration file,
-                # overwrite default from util.Config
+                # overwrite default from config module
 
                 if "debug" in jsonconf and jsonconf["debug"] is True:
                     config.debug = True
@@ -64,6 +65,9 @@ class Mainframe(object):
 
                 if "backstorefile" in jsonconf and len(jsonconf["backstorefile"]) > 0:
                     config.backstorefile = jsonconf["backstorefile"]
+
+                if "quiet" in jsonconf and jsonconf["quiet"] is True:
+                    config.quiet = True
 
                 if "cork" in jsonconf and "enabled" in jsonconf["cork"] and jsonconf["cork"]["enabled"] is True:
                     config.cork["enabled"] = True
@@ -92,7 +96,6 @@ class Mainframe(object):
                 else:
                     logger.warn("loading default config file failed")
 
-
         if "debug" in params and params["debug"] is True:
             config.debug = True
             config.logging_level = logging.DEBUG
@@ -104,17 +107,18 @@ class Mainframe(object):
         if "backstore_pickle" in params:
             config.backstorefile = params["backstore_pickle"]
 
+        if "quiet" in params:
+            config.quiet = params["quiet"]
+
         if "cork" in params and params["cork"] is True:
             config.cork["enabled"] = True
             # TODO auth data via command line
-
-        return config
 
 
     def __init__(self, params):
 
         # logging needs to be initialized before the log file gets parsed
-        default_logging_level = Config.logging_level
+        default_logging_level = config.logging_level
 
         if "logging_level" in params:
            default_logging_level = params["logging_level"]
@@ -123,16 +127,16 @@ class Mainframe(object):
                             format='%(asctime)s %(name)-20s %(levelname)-8s %(message)s',
                             datefmt='%m-%d %H:%M')
 
-        self.config = self.load_config(params)
-        logger.setLevel(self.config.logging_level)
+        self.load_config(params)
+        logger.setLevel(config.logging_level)
 
         self.backstore = Backstore()
 
-        if self.config.backstorefile is not None:
+        if config.backstorefile is not None:
             try:
-                self.backstore.deserialize(self.config.backstorefile)
+                self.backstore.deserialize(config.backstorefile)
             except Exception as e:
-                logger.warn("deserializing backstorefile {} failed".format(self.config.backstorefile), exc_info=True)
+                logger.warn("deserializing backstorefile {} failed".format(config.backstorefile), exc_info=True)
 
         self.plugins = []
         self.plugin_scheduler = Scheduler()
@@ -140,10 +144,10 @@ class Mainframe(object):
         self.message_queue = Queue()
         self.startup()
 
-        if self.config.cork is not None and self.config.cork["enabled"] is True:
-            logger.debug("initializing cork (SSL: {})".format(self.config.cork["SSL"]))
+        if config.cork is not None and config.cork["enabled"] is True:
+            logger.debug("initializing cork (SSL: {})".format(config.cork["SSL"]))
             cork.mainframe = self
-            cork.users = self.config.cork["authentication"]
+            cork.users = config.cork["authentication"]
 
             # context = SSL.Context(SSL.SSLv23_METHOD)
             # context.use_privatekey_file('../cert/key.pem')
@@ -152,11 +156,11 @@ class Mainframe(object):
             # context = ('../cert/cert.pem', '../cert/key.pem')
             context = "adhoc"
 
-            if self.config.cork["SSL"] is True:
+            if config.cork["SSL"] is True:
                 from OpenSSL import SSL
-                t = threading.Thread(target=cork.app.run, kwargs={"host": self.config.cork["host"], "port": self.config.cork["port"], "ssl_context": context})
+                t = threading.Thread(target=cork.app.run, kwargs={"host": config.cork["host"], "port": config.cork["port"], "ssl_context": context})
             else:
-                t = threading.Thread(target=cork.app.run, kwargs={"host": self.config.cork["host"], "port": self.config.cork["port"]})
+                t = threading.Thread(target=cork.app.run, kwargs={"host": config.cork["host"], "port": config.cork["port"]})
 
             t.daemon = True
             t.start()
@@ -312,7 +316,7 @@ class Mainframe(object):
                 plug.failure = None
             else:  # msg is actually an Exception
                 if plugin is not None:
-                    err = "plugin: {} work failed: {}".format(plugin, msg)
+                    err = "plugin: {} {} work failed: {}".format(plugin.get_generic_name(), plugin, msg)
                     logger.error(err, exc_info=True)
                     plug.failure = msg
                     if plug.plugin_configuration["notify_on_error"]:
@@ -328,7 +332,7 @@ class Mainframe(object):
         try:
             msglist = plugin.work()
             if len(msglist) != 0:
-                logger.debug("plugin {} produced {} message(s)".format(plugin.name, len(msglist)))
+                logger.debug("plugin {} {} produced {} message(s)".format(plugin.get_generic_name(), plugin.name, len(msglist)))
 
             for item in msglist:
                 queue.put((plugin, item))
@@ -342,7 +346,7 @@ class Mainframe(object):
             for bkstr_obj in self.backstore.get_all_data():
                 if bkstr_obj["sent_status"] == Status.unknown:
                     for plug in self.plugins:
-                        if not self.config.debug:
+                        if not config.debug:
                             sent_code = plug.deliver(bkstr_obj["message"])
                             self.backstore.update_status(bkstr_obj["message"].mid, status=sent_code)
                 else:
@@ -360,7 +364,7 @@ class Mainframe(object):
             if buff == SocketCommand.STATUS:
                 status = ""
 
-                if self.config.debug:
+                if config.debug:
                     status += "DEBUG MODE ENABLED"
 
                 for plug in self.plugins:
@@ -377,7 +381,7 @@ class Mainframe(object):
                     else:
                         fail = "ok"
 
-                    status += "{0:9s} {1:31s}: {2} {3}\n".format(plug.__class__.__name__, plug.name, self.plugin_scheduler.get_duty_cylce(plug), fail)
+                    status += "{0:9s} {1:31s}: {2} {3}\n".format(plug.get_generic_name(), plug.name, self.plugin_scheduler.get_duty_cylce(plug), fail)
 
                 if len(self.plugins) > 0:
                     status += "\n"
@@ -405,13 +409,14 @@ if __name__ == "__main__":
     params = {
         "logging_level": logging.DEBUG,
         "debug": True,
+        "quiet": True,
         "cork": True
     }
 
     mf = Mainframe(params)
 
     mf.backstore.add(Message("testpayload", mid="123"))
-    mf.backstore.add(Message("testpayload2", mid="124"))
+    mf.backstore.add(Message("testpayload2", priority=Priority.high, mid="124"))
 
     # picklefile = open("backstore.pickle", "w")
     # mf.backstore.serialize(picklefile)

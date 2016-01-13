@@ -107,17 +107,6 @@ class MessageJSONDecoder(object):  # not a proper JSONDecoder
 
         return msg
 
-class Config(object):
-
-    debug = False
-    logging_level = logging.INFO
-    backstorefile = None
-    cork = {"enabled" : False,
-            "host": "localhost",
-            "port": 5000,
-            "SSL": True,
-            "authentication": {}
-            }
 
 class Plugin(object):
 
@@ -138,6 +127,9 @@ class Plugin(object):
 
     def close(self):
         pass
+
+    def get_generic_name(self):
+        return self.__class__.__name__
 
     def __str__(self):
         return self.name
