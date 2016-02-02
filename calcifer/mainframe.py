@@ -367,6 +367,14 @@ class Mainframe(object):
                 if config.debug:
                     status += "DEBUG MODE ENABLED"
 
+                if config.quiet:
+                    if len(status) > 0:
+                        status += " | "
+                    status += "QUIET"
+
+                if len(status) > 0:
+                    status += "\n\n"
+
                 for plug in self.plugins:
                     # TODO: maybe print exception?
                     fail = plug.failure
